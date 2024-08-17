@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "ES2015",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "outDir": "./build",
+    "rootDir": "./src",
+    "esModuleInterop": true,
+    "moduleResolution": "Node",
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
+}

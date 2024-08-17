@@ -1,0 +1,24 @@
+{
+  "type": "module",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "rollup": "^4.20.0",
+    "tslib": "^2.6.3",
+    "typescript": "^5.5.4"
+  },
+  "name": "ocarina-input",
+  "version": "0.0.0",
+  "description": "Use an ocarina as an input device",
+  "main": "build/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Laura Brekelmans",
+  "license": "MIT",
+  "dependencies": {
+    "@tensorflow-models/speech-commands": "^0.5.4"
+  }
+}
