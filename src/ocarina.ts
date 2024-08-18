@@ -101,23 +101,4 @@ export class Ocarina {
     // createSongListener(pattern, callback) {
     //     this.songListeners.push({pattern: pattern.split(' '), callback});
     // }
-
-    // checkSongs(endedNote) {
-    //     this.songListeners.forEach(listener => {
-    //         if (this.recentNotes.join(' ') === listener.pattern.join(' ')) {
-    //             listener.callback();
-    //             this.dispatchSongEvent('song-ended', listener.pattern);
-    //         }
-    //     });
-    // }
-
-    dispatchSongEvent(eventName, pattern) {
-        const event = new CustomEvent(eventName, {
-            detail: {
-                pattern: pattern,
-                timestamp: Date.now() - this.startTime
-            }
-        });
-        window.dispatchEvent(event);
-    }
 }

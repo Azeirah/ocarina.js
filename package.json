@@ -19,6 +19,7 @@
   "author": "Laura Brekelmans",
   "license": "MIT",
   "dependencies": {
-    "@tensorflow-models/speech-commands": "^0.5.4"
+    "@tensorflow-models/speech-commands": "^0.5.4",
+    "ohm-js": "^17.1.0"
   }
 }
