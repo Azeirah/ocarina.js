@@ -1,6 +1,6 @@
 import * as ohm from "ohm-js";
 import {Note} from "./Note";
-import {Pitch} from "./types";
+import {NoteStartEvent, Pitch} from "./types";
 
 // this should be imported somehow but I can't be bothered to do that right now :(
 const song = `
@@ -60,17 +60,19 @@ export function createSongListener(
     const notes = semantics(match).toArray();
     let step = 0;
 
-    window.addEventListener("note-start", function (note) {
-        // @ts-ignore
+    window.addEventListener("note-start", function (note: NoteStartEvent) {
         if (notes[step].matches(note.detail.note)) {
+            console.log(`Note ${note.detail.note.toString()} matches ${notes[step].toString()}`)
             if (step < notes.length - 1) {
                 onPlayedNote(notes[step], step);
                 step += 1;
             } else {
+                onPlayedNote(notes[step], notes.length - 1);
                 onSuccess();
             }
         } else if (step > 0) {
             onFailed(notes[step], step);
+            step = 0;
         }
     });
 }

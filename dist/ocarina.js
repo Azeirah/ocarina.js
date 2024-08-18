@@ -5997,40 +5997,59 @@ OcarinaSong {
         const notes = semantics(match).toArray();
         let step = 0;
         window.addEventListener("note-start", function (note) {
-            // @ts-ignore
             if (notes[step].matches(note.detail.note)) {
+                console.log(`Note ${note.detail.note.toString()} matches ${notes[step].toString()}`);
                 if (step < notes.length - 1) {
                     onPlayedNote(notes[step], step);
                     step += 1;
                 }
                 else {
+                    onPlayedNote(notes[step], notes.length - 1);
                     onSuccess();
                 }
             }
             else if (step > 0) {
                 onFailed(notes[step], step);
+                step = 0;
             }
         });
     }
 
     console.log("Hoi!");
+    const container = document.createElement("div");
     const $currentNote = document.createElement("span");
     $currentNote.innerHTML = "-";
-    document.body.appendChild($currentNote);
+    container.appendChild($currentNote);
     let zeldasLullaby = "D F C D F C"; // not actually epona's song!! git gud idiot >_>
-    // const $zeldasLullaby = document.createElement("div");
-    // for (let i of zeldasLullaby) {
-    //     const $note = document.createElement("span");
-    //     $note.innerText = i;
-    //     $zeldasLullaby.appendChild($note);
-    // }
+    container.appendChild(document.createElement("br"));
+    container.appendChild(document.createElement("br"));
+    const $zeldasLullaby = document.createElement("p");
+    for (let i of zeldasLullaby) {
+        const $note = document.createElement("span");
+        $note.innerText = i;
+        $zeldasLullaby.appendChild($note);
+    }
+    container.appendChild($zeldasLullaby);
+    document.body.appendChild(container);
     const ocarina = new Ocarina();
     ocarina.listen().then(() => {
         console.log(`listening for zelda's lullaby ${zeldasLullaby}`);
         createSongListener(zeldasLullaby, function () {
-            console.log("song finished");
-        }, function (note) {
+            console.log('finish');
+            for (let $note of $zeldasLullaby.children) {
+                // @ts-ignore
+                $note.style.color = "steelblue";
+            }
         }, function (note, step) {
+            console.log(`note step: ${step} played: ${note.toString()}`);
+            console.log($zeldasLullaby.children, $zeldasLullaby.children[step].innerHTML);
+            // @ts-ignore
+            $zeldasLullaby.children[step * 2].style.color = "green";
+        }, function (note, step) {
+            for (let $note of $zeldasLullaby.children) {
+                // @ts-ignore
+                $note.style.color = "inherit";
+            }
         });
         window.addEventListener("note-start", function (e) {
             $currentNote.innerHTML = e.detail.note.toString();
