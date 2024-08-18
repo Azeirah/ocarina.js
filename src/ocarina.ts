@@ -1,6 +1,9 @@
 import {OcarinaClassifier} from "./ocarina-classifier";
 import {PitchDetector} from "./pitch-detection";
 import {NoteStabilityDetector} from "./Hysteresis";
+import {Note} from "./Note";
+
+const SAMPLING_FREQUENCY_IN_Hz = 100;
 
 export class Ocarina {
     private pitchListener: PitchDetector;
@@ -25,6 +28,11 @@ export class Ocarina {
         await this.pitchListener.init();
         await this.ocarinaDetector.init("http://localhost/models/ocarina-classifier")
         await this.ocarinaDetector.startListening((result) => {
+            if (this.ocarinaPlaying === false && result === true) {
+                this.dispatchOcarinaStart();
+            } else if (this.ocarinaPlaying === true && result === false) {
+                this.dispatchOcarinaEnd();
+            }
             this.ocarinaPlaying = result;
         });
         this.startDetection();
@@ -51,54 +59,44 @@ export class Ocarina {
                 this.currentNote = note;
                 this.dispatchNoteStart(note);
             }
-        }, 10); // Adjust interval as needed
+        }, 1_000 / SAMPLING_FREQUENCY_IN_Hz);
     }
 
     private dispatchNoteStart(note) {
         const event = new CustomEvent('note-start', {
             detail: {
-                type: "NoteStarted",
-                note: note,
-                timestamp: Date.now() - this.startTime
+                note: Note.fromNotation(note),
+                timestamp: +Date.now()
             }
         });
         window.dispatchEvent(event);
     }
 
     private dispatchNoteEnd(note) {
-        const endTimestamp = Date.now() - this.startTime;
         const event = new CustomEvent('note-end', {
             detail: {
-                type: "NoteEnded",
-                note: note,
-                // startTimestamp: this.currentNoteStartTime,
-                endTimestamp: endTimestamp,
-                // duration: endTimestamp - this.currentNoteStartTime
+                note: Note.fromNotation(note),
+                timestamp: +Date.now(),
             }
         });
         window.dispatchEvent(event);
-        // this.checkSongs(note);
     }
 
-    pitchToNote(pitch) {
-        if (pitch === 0) return null; // No pitch detected
-
-        const A4 = 440; // A4 note frequency in Hz
-        const C0 = A4 * Math.pow(2, -4.75); // C0 frequency (lowest note)
-        const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-
-        // Calculate number of half steps from C0
-        const halfSteps = Math.round(12 * Math.log2(pitch / C0));
-
-        // Calculate octave and note index
-        const octave = Math.floor(halfSteps / 12);
-        const noteIndex = halfSteps % 12;
-
-        // Construct note name
-        return noteNames[noteIndex] + octave;
+    private dispatchOcarinaStart() {
+        const event = new CustomEvent('ocarina-start', {
+            detail: {
+                timestamp: +Date.now()
+            }
+        });
+        window.dispatchEvent(event);
     }
 
-    // createSongListener(pattern, callback) {
-    //     this.songListeners.push({pattern: pattern.split(' '), callback});
-    // }
+    private dispatchOcarinaEnd() {
+        const event = new CustomEvent('ocarina-end', {
+            detail: {
+                timestamp: +Date.now()
+            }
+        });
+        window.dispatchEvent(event);
+    }
 }

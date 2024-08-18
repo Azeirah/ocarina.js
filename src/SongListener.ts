@@ -1,4 +1,6 @@
 import * as ohm from "ohm-js";
+import {Note} from "./Note";
+import {Pitch} from "./types";
 
 // this should be imported somehow but I can't be bothered to do that right now :(
 const song = `
@@ -19,54 +21,6 @@ OcarinaSong {
   Sharp = "♯" | "#"
   Accidental = Flat | Sharp
 }`;
-
-type Pitch = "C" | "D" | "E" | "F" | "G" | "A" | "B";
-
-class Note {
-    constructor(private pitch: Pitch, private accidental: "flat" | "sharp" | null, private octave: string | null) {
-    }
-
-    matches(note: string): boolean {
-        // Split the input note string into its components
-        const regex = /^([A-G])(#|b)?(\d)?$/;
-        const match = note.match(regex);
-
-        if (!match) {
-            return false;
-        }
-
-        const [, notePitch, noteAccidental, noteOctave] = match;
-
-        // Check if the pitch matches
-        if (notePitch !== this.pitch) {
-            return false;
-        }
-
-        // Check if the accidental matches
-        if (this.accidental === null && noteAccidental !== undefined) {
-            return false;
-        }
-        if (this.accidental === "sharp" && noteAccidental !== "#") {
-            return false;
-        }
-        if (this.accidental === "flat" && noteAccidental !== "b") {
-            return false;
-        }
-
-        // Check if the octave matches (if specified)
-        if (this.octave !== null) {
-            if (noteOctave === undefined) {
-                return false;
-            }
-            if (noteOctave !== this.octave.toString()) {
-                return false;
-            }
-        }
-
-        console.groupEnd();
-        return true;
-    }
-}
 
 const songGrammar = ohm.grammar(song);
 const semantics = songGrammar.createSemantics().addOperation('toArray', {
@@ -91,7 +45,12 @@ const semantics = songGrammar.createSemantics().addOperation('toArray', {
     }
 });
 
-export function createSongListener(song: string, onSuccess: () => void, onPlayedNote: (note: Note) => void) {
+export function createSongListener(
+    song: string,
+    onSuccess: () => void,
+    onPlayedNote: (note: Note, step: number) => void,
+    onFailed: (note: Note, step: number) => void
+) {
     let match = songGrammar.match(song);
     if (match.failed()) {
         console.error(match.message);
@@ -105,11 +64,13 @@ export function createSongListener(song: string, onSuccess: () => void, onPlayed
         // @ts-ignore
         if (notes[step].matches(note.detail.note)) {
             if (step < notes.length - 1) {
-                onPlayedNote(notes[step]);
+                onPlayedNote(notes[step], step);
                 step += 1;
-            } else  {
+            } else {
                 onSuccess();
             }
+        } else if (step > 0) {
+            onFailed(notes[step], step);
         }
     });
 }

@@ -242,6 +242,77 @@
     //
     // testFrequencies.forEach(freq => onFrequencyReceived(freq));
 
+    class Note {
+        constructor(pitch, accidental, octave) {
+            this.pitch = pitch;
+            this.accidental = accidental;
+            this.octave = octave;
+        }
+        matches(note) {
+            // Split the input note string into its components
+            const regex = /^([A-G])(#|b)?(\d)?$/;
+            const match = note.toString().match(regex);
+            if (!match) {
+                return false;
+            }
+            const [, notePitch, noteAccidental, noteOctave] = match;
+            // Check if the pitch matches
+            if (notePitch !== this.pitch) {
+                return false;
+            }
+            // Check if the accidental matches
+            if (this.accidental === null && noteAccidental !== undefined) {
+                return false;
+            }
+            if (this.accidental === "sharp" && noteAccidental !== "#") {
+                return false;
+            }
+            if (this.accidental === "flat" && noteAccidental !== "b") {
+                return false;
+            }
+            // Check if the octave matches (if specified)
+            if (this.octave !== null) {
+                if (noteOctave === undefined) {
+                    return false;
+                }
+                if (noteOctave !== this.octave.toString()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        toString() {
+            const pitch = this.pitch;
+            let accidental = "";
+            if (this.accidental === "flat")
+                accidental = "b";
+            if (this.accidental === "sharp")
+                accidental = "#";
+            const octave = this.octave ? this.octave : "";
+            return pitch + accidental + octave;
+        }
+    }
+    function parseAccidental(accidental) {
+        if (accidental === null)
+            return null;
+        if (accidental === "b" || accidental === "♭") {
+            return "flat";
+        }
+        if (accidental === "#" || accidental === "♯") {
+            return "sharp";
+        }
+    }
+    Note.fromNotation = function (noteNotation) {
+        const regex = /^([A-G])(#|b)?(\d)?$/;
+        const match = noteNotation.match(regex);
+        if (!match) {
+            return null;
+        }
+        const [, notePitch, noteAccidental, noteOctave] = match;
+        return new Note(notePitch, parseAccidental(noteAccidental), noteOctave !== null && noteOctave !== void 0 ? noteOctave : null);
+    };
+
+    const SAMPLING_FREQUENCY_IN_Hz = 100;
     class Ocarina {
         constructor() {
             this.pitchListener = new PitchDetector();
@@ -256,6 +327,12 @@
                 yield this.pitchListener.init();
                 yield this.ocarinaDetector.init("http://localhost/models/ocarina-classifier");
                 yield this.ocarinaDetector.startListening((result) => {
+                    if (this.ocarinaPlaying === false && result === true) {
+                        this.dispatchOcarinaStart();
+                    }
+                    else if (this.ocarinaPlaying === true && result === false) {
+                        this.dispatchOcarinaEnd();
+                    }
                     this.ocarinaPlaying = result;
                 });
                 this.startDetection();
@@ -283,45 +360,41 @@
                     this.currentNote = note;
                     this.dispatchNoteStart(note);
                 }
-            }, 10); // Adjust interval as needed
+            }, 1000 / SAMPLING_FREQUENCY_IN_Hz);
         }
         dispatchNoteStart(note) {
             const event = new CustomEvent('note-start', {
                 detail: {
-                    type: "NoteStarted",
-                    note: note,
-                    timestamp: Date.now() - this.startTime
+                    note: Note.fromNotation(note),
+                    timestamp: +Date.now()
                 }
             });
             window.dispatchEvent(event);
         }
         dispatchNoteEnd(note) {
-            const endTimestamp = Date.now() - this.startTime;
             const event = new CustomEvent('note-end', {
                 detail: {
-                    type: "NoteEnded",
-                    note: note,
-                    // startTimestamp: this.currentNoteStartTime,
-                    endTimestamp: endTimestamp,
-                    // duration: endTimestamp - this.currentNoteStartTime
+                    note: Note.fromNotation(note),
+                    timestamp: +Date.now(),
                 }
             });
             window.dispatchEvent(event);
-            // this.checkSongs(note);
         }
-        pitchToNote(pitch) {
-            if (pitch === 0)
-                return null; // No pitch detected
-            const A4 = 440; // A4 note frequency in Hz
-            const C0 = A4 * Math.pow(2, -4.75); // C0 frequency (lowest note)
-            const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-            // Calculate number of half steps from C0
-            const halfSteps = Math.round(12 * Math.log2(pitch / C0));
-            // Calculate octave and note index
-            const octave = Math.floor(halfSteps / 12);
-            const noteIndex = halfSteps % 12;
-            // Construct note name
-            return noteNames[noteIndex] + octave;
+        dispatchOcarinaStart() {
+            const event = new CustomEvent('ocarina-start', {
+                detail: {
+                    timestamp: +Date.now()
+                }
+            });
+            window.dispatchEvent(event);
+        }
+        dispatchOcarinaEnd() {
+            const event = new CustomEvent('ocarina-end', {
+                detail: {
+                    timestamp: +Date.now()
+                }
+            });
+            window.dispatchEvent(event);
         }
     }
 
@@ -5893,67 +5966,6 @@ OcarinaSong {
   Sharp = "♯" | "#"
   Accidental = Flat | Sharp
 }`;
-    class Note {
-        constructor(pitch, accidental, octave) {
-            this.pitch = pitch;
-            this.accidental = accidental;
-            this.octave = octave;
-        }
-        matches(note) {
-            console.group(`Matching note ${note}`);
-            // Split the input note string into its components
-            const regex = /^([A-G])(#|b)?(\d)?$/;
-            const match = note.match(regex);
-            if (!match) {
-                console.log("Regex doesn't match (bug)");
-                console.groupEnd();
-                return false;
-            }
-            console.log("Regex matches");
-            const [, notePitch, noteAccidental, noteOctave] = match;
-            // Check if the pitch matches
-            if (notePitch !== this.pitch) {
-                console.log(`Pitch doesn't match, ${notePitch} !== ${this.pitch}`);
-                console.groupEnd();
-                return false;
-            }
-            console.log("Pitch matches");
-            // Check if the accidental matches
-            if (this.accidental === null && noteAccidental !== undefined) {
-                console.log(`Accidental doesn't match, expected null but got ${noteAccidental}`);
-                console.groupEnd();
-                return false;
-            }
-            if (this.accidental === "sharp" && noteAccidental !== "#") {
-                console.log(`Accidental doesn't match, expected # but got ${noteAccidental}`);
-                console.groupEnd();
-                return false;
-            }
-            if (this.accidental === "flat" && noteAccidental !== "b") {
-                console.log(`Accidental doesn't match, expected b but got ${noteAccidental}`);
-                console.groupEnd();
-                return false;
-            }
-            console.log("Accidental matches");
-            // Check if the octave matches (if specified)
-            if (this.octave !== null) {
-                if (noteOctave === undefined) {
-                    console.log(`Octave doesn't match, expected ${this.octave} but got undefined`);
-                    console.groupEnd();
-                    return false;
-                }
-                if (noteOctave !== this.octave.toString()) {
-                    console.log(`Octave doesn't match, expected ${this.octave} but got ${noteOctave}`);
-                    console.groupEnd();
-                    return false;
-                }
-            }
-            console.log("Octave matches or is not specified");
-            console.log("All checks passed, notes match");
-            console.groupEnd();
-            return true;
-        }
-    }
     const songGrammar = grammar(song);
     const semantics = songGrammar.createSemantics().addOperation('toArray', {
         Exp: function (note) {
@@ -5976,7 +5988,7 @@ OcarinaSong {
             return children.map((n) => n.toArray());
         }
     });
-    function createSongListener(song, onSuccess, onPlayedNote) {
+    function createSongListener(song, onSuccess, onPlayedNote, onFailed) {
         let match = songGrammar.match(song);
         if (match.failed()) {
             console.error(match.message);
@@ -5988,33 +6000,40 @@ OcarinaSong {
             // @ts-ignore
             if (notes[step].matches(note.detail.note)) {
                 if (step < notes.length - 1) {
-                    onPlayedNote(notes[step]);
+                    onPlayedNote(notes[step], step);
                     step += 1;
                 }
                 else {
                     onSuccess();
                 }
             }
+            else if (step > 0) {
+                onFailed(notes[step], step);
+            }
         });
     }
 
     console.log("Hoi!");
-    const $note = document.createElement("span");
-    $note.innerHTML = "-";
-    document.body.appendChild($note);
+    const $currentNote = document.createElement("span");
+    $currentNote.innerHTML = "-";
+    document.body.appendChild($currentNote);
+    let zeldasLullaby = "D F C D F C"; // not actually epona's song!! git gud idiot >_>
+    // const $zeldasLullaby = document.createElement("div");
+    // for (let i of zeldasLullaby) {
+    //     const $note = document.createElement("span");
+    //     $note.innerText = i;
+    //     $zeldasLullaby.appendChild($note);
+    // }
     const ocarina = new Ocarina();
     ocarina.listen().then(() => {
-        console.log("listening for epona's song");
-        console.log("D F C D F C");
-        createSongListener("D F C D F C", function () {
+        console.log(`listening for zelda's lullaby ${zeldasLullaby}`);
+        createSongListener(zeldasLullaby, function () {
             console.log("song finished");
         }, function (note) {
-            console.log("played one note");
-            console.log(note);
+        }, function (note, step) {
         });
         window.addEventListener("note-start", function (e) {
-            // @ts-ignore
-            $note.innerHTML = e.detail.note;
+            $currentNote.innerHTML = e.detail.note.toString();
         });
     });
 
