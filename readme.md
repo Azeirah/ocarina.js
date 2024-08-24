@@ -48,6 +48,8 @@ ocarina.onOcarinaEnd(({timestamp}) => {
 });
 ```
 
+Ocarina detection is sampled approximately once per second.
+
 #### Listen for notes
 
 ```ts
@@ -60,6 +62,7 @@ ocarina.onNoteEnd(({note, timestamp}) => {
 
 });
 ```
+The library supports a theoretical maximum of 12 notes per second.
 
 #### The `Note` object
 

@@ -27,6 +27,7 @@ export class PitchDetector {
     detectPitch() {
         this.analyser.getFloatTimeDomainData(this.dataArray);
         const ac = this.autoCorrelate(this.dataArray, this.audioContext.sampleRate);
+        console.log(ac);
         return ac === -1 ? null : ac;
     }
 

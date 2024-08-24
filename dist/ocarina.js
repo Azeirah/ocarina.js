@@ -64,11 +64,10 @@
                 this.recognizer = speechCommands__namespace.create('BROWSER_FFT', undefined, checkpointURL, metadataURL);
                 yield this.recognizer.ensureModelLoaded();
                 this.labels = this.recognizer.wordLabels();
-                console.log('Model loaded successfully');
             });
         }
         startListening(callback_1) {
-            return __awaiter(this, arguments, void 0, function* (callback, probabilityThreshold = 0.75, overlapFactor = 0.5) {
+            return __awaiter(this, arguments, void 0, function* (callback, probabilityThreshold = 0.75, overlapFactor = 0.1) {
                 if (!this.recognizer) {
                     throw new Error('Model not initialized. Call init() first.');
                 }
@@ -78,7 +77,7 @@
                     const probability = result.scores[1];
                     callback(probability > 0.5);
                 }, {
-                    includeSpectrogram: true,
+                    includeSpectrogram: false,
                     probabilityThreshold,
                     invokeCallbackOnNoiseAndUnknown: true,
                     overlapFactor,
@@ -119,6 +118,7 @@
         detectPitch() {
             this.analyser.getFloatTimeDomainData(this.dataArray);
             const ac = this.autoCorrelate(this.dataArray, this.audioContext.sampleRate);
+            console.log(ac);
             return ac === -1 ? null : ac;
         }
         autoCorrelate(buffer, sampleRate) {
@@ -5912,17 +5912,16 @@ OcarinaSong {
         return semantics(match).toArray();
     }
 
-    const SAMPLING_FREQUENCY_IN_Hz = 100;
+    const SAMPLING_FREQUENCY_IN_Hz = 40;
     class Ocarina {
         constructor() {
+            this.ocarinaPlaying = false;
             this.startListeners = [];
             this.endListeners = [];
             this.ocarinaStartListeners = [];
             this.ocarinaEndListeners = [];
-            this.SongListeners = [];
             this.pitchListener = new PitchDetector();
             this.ocarinaDetector = new OcarinaClassifier();
-            this.isPlaying = false;
             this.currentNote = null;
             this.noteOnsetDetector = new NoteStabilityDetector();
         }
@@ -5966,14 +5965,15 @@ OcarinaSong {
             return __awaiter(this, void 0, void 0, function* () {
                 yield this.pitchListener.init();
                 yield this.ocarinaDetector.init("http://localhost/models/ocarina-2pc");
-                yield this.ocarinaDetector.startListening((result) => {
-                    if (this.ocarinaPlaying === false && result === true) {
+                yield this.ocarinaDetector.startListening((current) => {
+                    const prev = this.ocarinaPlaying;
+                    if (!prev && current) {
                         this.dispatchOcarinaStart();
                     }
-                    else if (this.ocarinaPlaying === true && result === false) {
+                    if (prev && !current) {
                         this.dispatchOcarinaEnd();
                     }
-                    this.ocarinaPlaying = result;
+                    this.ocarinaPlaying = current;
                 });
                 this.startDetection();
                 return this;
@@ -5981,26 +5981,25 @@ OcarinaSong {
         }
         startDetection() {
             setInterval(() => {
-                const isOcarina = this.ocarinaPlaying;
+                var _a;
                 const pitch = this.pitchListener.detectPitch();
                 const { isStable, note: noteString } = this.noteOnsetDetector.onFrequencyReceived(pitch);
-                if (pitch == null || isOcarina == null || !isStable)
-                    return;
-                const note = Note.fromNotation(noteString);
-                if (isOcarina && !this.isPlaying) {
-                    this.isPlaying = true;
-                    this.currentNote = note;
-                    this.dispatchNoteStart(note);
-                }
-                else if (!isOcarina && this.isPlaying) {
-                    this.isPlaying = false;
+                if (pitch == null && this.currentNote) {
                     this.dispatchNoteEnd(this.currentNote);
                     this.currentNote = null;
+                    return;
                 }
-                else if (isOcarina && this.currentNote.toString() !== note.toString()) {
-                    this.dispatchNoteEnd(this.currentNote);
-                    this.currentNote = note;
-                    this.dispatchNoteStart(note);
+                if (!isStable || pitch == null)
+                    return;
+                const note = Note.fromNotation(noteString);
+                if (this.ocarinaPlaying) {
+                    if (((_a = this.currentNote) === null || _a === void 0 ? void 0 : _a.toString()) !== note.toString()) {
+                        if (this.currentNote) {
+                            this.dispatchNoteEnd(this.currentNote);
+                        }
+                        this.dispatchNoteStart(note);
+                        this.currentNote = note;
+                    }
                 }
             }, 1000 / SAMPLING_FREQUENCY_IN_Hz);
         }
@@ -6057,23 +6056,12 @@ OcarinaSong {
                 }
             }
         });
-        // ocarina.onOcarinaStart(({timestamp}) => {
-        //
-        // });
-        // ocarina.onOcarinaEnd(({timestamp}) => {
-        //
-        // });
-        //
-        // ocarina.onNoteStart(({note, timestamp}) => {
-        //     $currentNote.innerHTML = note.toString();
-        // });
-        //
-        // ocarina.onNoteEnd(({note, timestamp}) => {
-        //     note.matches()
-        //
-        // });
-        //
-        // Note.fromNotation()
+        ocarina.onNoteStart(({ note, timestamp }) => {
+            $currentNote.innerHTML = note.toString();
+        });
+        ocarina.onOcarinaEnd(() => {
+            $currentNote.innerHTML = "-";
+        });
     });
 
 })(speechCommands);

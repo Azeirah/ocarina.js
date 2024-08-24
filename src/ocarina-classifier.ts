@@ -17,13 +17,12 @@ export class OcarinaClassifier {
 
         await this.recognizer.ensureModelLoaded();
         this.labels = this.recognizer.wordLabels();
-        console.log('Model loaded successfully');
     }
 
     async startListening(
         callback: (result: boolean) => void,
         probabilityThreshold = 0.75,
-        overlapFactor = 0.5
+        overlapFactor = 0.1
     ) {
         if (!this.recognizer) {
             throw new Error('Model not initialized. Call init() first.');
@@ -36,7 +35,7 @@ export class OcarinaClassifier {
                 callback(probability > 0.5);
             },
             {
-                includeSpectrogram: true,
+                includeSpectrogram: false,
                 probabilityThreshold,
                 invokeCallbackOnNoiseAndUnknown: true,
                 overlapFactor,

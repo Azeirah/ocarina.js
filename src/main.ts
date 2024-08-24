@@ -39,22 +39,12 @@ new Ocarina().listen().then((ocarina) => {
         }
     });
 
-    // ocarina.onOcarinaStart(({timestamp}) => {
-    //
-    // });
-    // ocarina.onOcarinaEnd(({timestamp}) => {
-    //
-    // });
-    //
-    // ocarina.onNoteStart(({note, timestamp}) => {
-    //     $currentNote.innerHTML = note.toString();
-    // });
-    //
-    // ocarina.onNoteEnd(({note, timestamp}) => {
-    //     note.matches()
-    //
-    // });
-    //
-    // Note.fromNotation()
+    ocarina.onNoteStart(({note, timestamp}) => {
+        $currentNote.innerHTML = note.toString();
+    });
+
+    ocarina.onOcarinaEnd(() => {
+        $currentNote.innerHTML = "-";
+    });
 });
 
