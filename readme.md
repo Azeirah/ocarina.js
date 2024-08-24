@@ -1,6 +1,6 @@
 # 🎼 Ocarina.js
 
-Your Ocarina as an input device.
+Your Ocarina is an input device.
 
 ## Usage
 
