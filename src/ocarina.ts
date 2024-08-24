@@ -26,7 +26,7 @@ export class Ocarina {
 
     async listen() {
         await this.pitchListener.init();
-        await this.ocarinaDetector.init("http://localhost/models/ocarina-classifier")
+        await this.ocarinaDetector.init("http://localhost/models/ocarina-2pc")
         await this.ocarinaDetector.startListening((result) => {
             if (this.ocarinaPlaying === false && result === true) {
                 this.dispatchOcarinaStart();

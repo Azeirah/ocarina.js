@@ -325,7 +325,7 @@
         listen() {
             return __awaiter(this, void 0, void 0, function* () {
                 yield this.pitchListener.init();
-                yield this.ocarinaDetector.init("http://localhost/models/ocarina-classifier");
+                yield this.ocarinaDetector.init("http://localhost/models/ocarina-2pc");
                 yield this.ocarinaDetector.startListening((result) => {
                     if (this.ocarinaPlaying === false && result === true) {
                         this.dispatchOcarinaStart();
@@ -6015,16 +6015,15 @@ OcarinaSong {
         });
     }
 
-    console.log("Hoi!");
     const container = document.createElement("div");
     const $currentNote = document.createElement("span");
     $currentNote.innerHTML = "-";
     container.appendChild($currentNote);
-    let zeldasLullaby = "D F C D F C"; // not actually epona's song!! git gud idiot >_>
+    let zeldasLullabyLonger = "D F C A# C D F";
     container.appendChild(document.createElement("br"));
     container.appendChild(document.createElement("br"));
     const $zeldasLullaby = document.createElement("p");
-    for (let i of zeldasLullaby) {
+    for (let i of zeldasLullabyLonger.split(" ")) {
         const $note = document.createElement("span");
         $note.innerText = i;
         $zeldasLullaby.appendChild($note);
@@ -6033,18 +6032,14 @@ OcarinaSong {
     document.body.appendChild(container);
     const ocarina = new Ocarina();
     ocarina.listen().then(() => {
-        console.log(`listening for zelda's lullaby ${zeldasLullaby}`);
-        createSongListener(zeldasLullaby, function () {
-            console.log('finish');
+        createSongListener(zeldasLullabyLonger, function () {
             for (let $note of $zeldasLullaby.children) {
                 // @ts-ignore
-                $note.style.color = "steelblue";
+                $note.style.color = "green";
             }
         }, function (note, step) {
-            console.log(`note step: ${step} played: ${note.toString()}`);
-            console.log($zeldasLullaby.children, $zeldasLullaby.children[step].innerHTML);
             // @ts-ignore
-            $zeldasLullaby.children[step * 2].style.color = "green";
+            $zeldasLullaby.children[step].style.color = "steelblue";
         }, function (note, step) {
             for (let $note of $zeldasLullaby.children) {
                 // @ts-ignore
