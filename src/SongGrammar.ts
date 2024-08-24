@@ -1,8 +1,7 @@
 import * as ohm from "ohm-js";
 import {Note} from "./Note";
-import {NoteStartEvent, Pitch} from "./types";
+import {Pitch} from "./types";
 
-// this should be imported somehow but I can't be bothered to do that right now :(
 const song = `
 OcarinaSong {
   Exp = Note+
@@ -22,7 +21,7 @@ OcarinaSong {
   Accidental = Flat | Sharp
 }`;
 
-const songGrammar = ohm.grammar(song);
+export const songGrammar = ohm.grammar(song);
 const semantics = songGrammar.createSemantics().addOperation('toArray', {
     Exp: function (note) {
         return note.toArray();
@@ -45,34 +44,12 @@ const semantics = songGrammar.createSemantics().addOperation('toArray', {
     }
 });
 
-export function createSongListener(
-    song: string,
-    onSuccess: () => void,
-    onPlayedNote: (note: Note, step: number) => void,
-    onFailed: (note: Note, step: number) => void
-) {
+export function songToNotes(song: string): Note[] {
     let match = songGrammar.match(song);
     if (match.failed()) {
         console.error(match.message);
         throw new Error("Your song pattern doesn't match the syntax.");
     }
 
-    const notes = semantics(match).toArray();
-    let step = 0;
-
-    window.addEventListener("note-start", function (note: NoteStartEvent) {
-        if (notes[step].matches(note.detail.note)) {
-            console.log(`Note ${note.detail.note.toString()} matches ${notes[step].toString()}`)
-            if (step < notes.length - 1) {
-                onPlayedNote(notes[step], step);
-                step += 1;
-            } else {
-                onPlayedNote(notes[step], notes.length - 1);
-                onSuccess();
-            }
-        } else if (step > 0) {
-            onFailed(notes[step], step);
-            step = 0;
-        }
-    });
+    return semantics(match).toArray();
 }

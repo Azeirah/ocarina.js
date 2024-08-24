@@ -3,27 +3,11 @@ import {Note} from "./Note";
 export type Pitch = "C" | "D" | "E" | "F" | "G" | "A" | "B";
 export type Accidental = "flat" | "sharp";
 
-interface NoteEventDetail {
+export type NoteEvent = {
     note: Note;
     timestamp: number;
 }
 
-interface OcarinaEventDetail {
+export type OcarinaEvent = {
     timestamp: number;
-}
-
-export interface NoteStartEvent extends CustomEvent {
-    detail: NoteEventDetail;
-}
-
-export interface NoteEndEvent extends CustomEvent {
-    detail: NoteEventDetail;
-}
-
-export interface OcarinaStartEvent extends CustomEvent {
-    detail: OcarinaEventDetail;
-}
-
-export interface OcarinaEndEvent extends CustomEvent {
-    detail: OcarinaEventDetail;
 }

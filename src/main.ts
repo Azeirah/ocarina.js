@@ -1,6 +1,5 @@
 import {Ocarina} from "./ocarina";
-import {createSongListener} from "./SongListener";
-import {NoteStartEvent} from "./types";
+import {Note} from "./Note";
 
 const container = document.createElement("div");
 
@@ -23,25 +22,39 @@ for (let i of zeldasLullabyLonger.split(" ")) {
 container.appendChild($zeldasLullaby);
 document.body.appendChild(container);
 
-const ocarina = new Ocarina();
-ocarina.listen().then(() => {
-    createSongListener(zeldasLullabyLonger, function () {
-        for (let $note of $zeldasLullaby.children) {
-            // @ts-ignore
-            $note.style.color = "green";
-        }
-    }, function (note, step) {
-        // @ts-ignore
-        $zeldasLullaby.children[step].style.color = "steelblue";
-    }, function (note, step) {
-        for (let $note of $zeldasLullaby.children) {
-            // @ts-ignore
-            $note.style.color = "inherit";
+new Ocarina().listen().then((ocarina) => {
+    ocarina.listenForSong(zeldasLullabyLonger, {
+        onNotePlayed(note: Note, step: number): void {
+            ($zeldasLullaby.children[step] as HTMLSpanElement).style.color = "steelblue";
+        },
+        onSongFailed(note: Note, step: number): void {
+            for (let $note of $zeldasLullaby.children) {
+                ($note as HTMLSpanElement).style.color = "inherit";
+            }
+        },
+        onSongPlayed(): void {
+            for (let $note of $zeldasLullaby.children) {
+                ($note as HTMLSpanElement).style.color = "green";
+            }
         }
     });
 
-    window.addEventListener("note-start", function (e: NoteStartEvent) {
-        $currentNote.innerHTML = e.detail.note.toString();
-    });
+    // ocarina.onOcarinaStart(({timestamp}) => {
+    //
+    // });
+    // ocarina.onOcarinaEnd(({timestamp}) => {
+    //
+    // });
+    //
+    // ocarina.onNoteStart(({note, timestamp}) => {
+    //     $currentNote.innerHTML = note.toString();
+    // });
+    //
+    // ocarina.onNoteEnd(({note, timestamp}) => {
+    //     note.matches()
+    //
+    // });
+    //
+    // Note.fromNotation()
 });
 

@@ -243,6 +243,15 @@
     // testFrequencies.forEach(freq => onFrequencyReceived(freq));
 
     class Note {
+        static fromNotation(noteNotation) {
+            const regex = /^([A-G])([#b])?(\d)?$/;
+            const match = noteNotation.match(regex);
+            if (!match) {
+                return null;
+            }
+            const [, notePitch, noteAccidental, noteOctave] = match;
+            return new Note(notePitch, parseAccidental(noteAccidental), noteOctave !== null && noteOctave !== void 0 ? noteOctave : null);
+        }
         constructor(pitch, accidental, octave) {
             this.pitch = pitch;
             this.accidental = accidental;
@@ -302,101 +311,8 @@
             return "sharp";
         }
     }
-    Note.fromNotation = function (noteNotation) {
-        const regex = /^([A-G])(#|b)?(\d)?$/;
-        const match = noteNotation.match(regex);
-        if (!match) {
-            return null;
-        }
-        const [, notePitch, noteAccidental, noteOctave] = match;
-        return new Note(notePitch, parseAccidental(noteAccidental), noteOctave !== null && noteOctave !== void 0 ? noteOctave : null);
-    };
-
-    const SAMPLING_FREQUENCY_IN_Hz = 100;
-    class Ocarina {
-        constructor() {
-            this.pitchListener = new PitchDetector();
-            this.ocarinaDetector = new OcarinaClassifier();
-            this.isPlaying = false;
-            this.currentNote = null;
-            this.noteOnsetDetector = new NoteStabilityDetector();
-            this.startTime = Date.now();
-        }
-        listen() {
-            return __awaiter(this, void 0, void 0, function* () {
-                yield this.pitchListener.init();
-                yield this.ocarinaDetector.init("http://localhost/models/ocarina-2pc");
-                yield this.ocarinaDetector.startListening((result) => {
-                    if (this.ocarinaPlaying === false && result === true) {
-                        this.dispatchOcarinaStart();
-                    }
-                    else if (this.ocarinaPlaying === true && result === false) {
-                        this.dispatchOcarinaEnd();
-                    }
-                    this.ocarinaPlaying = result;
-                });
-                this.startDetection();
-            });
-        }
-        startDetection() {
-            setInterval(() => {
-                const isOcarina = this.ocarinaPlaying;
-                const pitch = this.pitchListener.detectPitch();
-                const { isStable, note } = this.noteOnsetDetector.onFrequencyReceived(pitch);
-                if (pitch == null || isOcarina == null || !isStable)
-                    return;
-                if (isOcarina && !this.isPlaying) {
-                    this.isPlaying = true;
-                    this.currentNote = note;
-                    this.dispatchNoteStart(note);
-                }
-                else if (!isOcarina && this.isPlaying) {
-                    this.isPlaying = false;
-                    this.dispatchNoteEnd(this.currentNote);
-                    this.currentNote = null;
-                }
-                else if (isOcarina && this.currentNote !== note) {
-                    this.dispatchNoteEnd(this.currentNote);
-                    this.currentNote = note;
-                    this.dispatchNoteStart(note);
-                }
-            }, 1000 / SAMPLING_FREQUENCY_IN_Hz);
-        }
-        dispatchNoteStart(note) {
-            const event = new CustomEvent('note-start', {
-                detail: {
-                    note: Note.fromNotation(note),
-                    timestamp: +Date.now()
-                }
-            });
-            window.dispatchEvent(event);
-        }
-        dispatchNoteEnd(note) {
-            const event = new CustomEvent('note-end', {
-                detail: {
-                    note: Note.fromNotation(note),
-                    timestamp: +Date.now(),
-                }
-            });
-            window.dispatchEvent(event);
-        }
-        dispatchOcarinaStart() {
-            const event = new CustomEvent('ocarina-start', {
-                detail: {
-                    timestamp: +Date.now()
-                }
-            });
-            window.dispatchEvent(event);
-        }
-        dispatchOcarinaEnd() {
-            const event = new CustomEvent('ocarina-end', {
-                detail: {
-                    timestamp: +Date.now()
-                }
-            });
-            window.dispatchEvent(event);
-        }
-    }
+    // @ts-ignore
+    window.Note = Note;
 
     // --------------------------------------------------------------------
     // Private Stuff
@@ -5947,7 +5863,6 @@
       return ns;
     }
 
-    // this should be imported somehow but I can't be bothered to do that right now :(
     const song = `
 OcarinaSong {
   Exp = Note+
@@ -5988,38 +5903,134 @@ OcarinaSong {
             return children.map((n) => n.toArray());
         }
     });
-    function createSongListener(song, onSuccess, onPlayedNote, onFailed) {
+    function songToNotes(song) {
         let match = songGrammar.match(song);
         if (match.failed()) {
             console.error(match.message);
             throw new Error("Your song pattern doesn't match the syntax.");
         }
-        const notes = semantics(match).toArray();
-        let step = 0;
-        window.addEventListener("note-start", function (note) {
-            if (notes[step].matches(note.detail.note)) {
-                console.log(`Note ${note.detail.note.toString()} matches ${notes[step].toString()}`);
-                if (step < notes.length - 1) {
-                    onPlayedNote(notes[step], step);
-                    step += 1;
+        return semantics(match).toArray();
+    }
+
+    const SAMPLING_FREQUENCY_IN_Hz = 100;
+    class Ocarina {
+        constructor() {
+            this.startListeners = [];
+            this.endListeners = [];
+            this.ocarinaStartListeners = [];
+            this.ocarinaEndListeners = [];
+            this.SongListeners = [];
+            this.pitchListener = new PitchDetector();
+            this.ocarinaDetector = new OcarinaClassifier();
+            this.isPlaying = false;
+            this.currentNote = null;
+            this.noteOnsetDetector = new NoteStabilityDetector();
+        }
+        listenForSong(song, { onSongPlayed, onNotePlayed, onSongFailed }) {
+            const notes = songToNotes(song);
+            let step = 1;
+            this.onNoteStart(function ({ note }) {
+                if (notes[step].matches(note)) {
+                    if (step < notes.length - 1) {
+                        onNotePlayed(notes[step], step);
+                        step += 1;
+                    }
+                    else {
+                        onNotePlayed(notes[step], notes.length - 1);
+                        onSongPlayed();
+                    }
                 }
-                else {
-                    onPlayedNote(notes[step], notes.length - 1);
-                    onSuccess();
+                else if (step > 0) {
+                    onSongFailed(notes[step], step);
+                    step = 0;
                 }
+            });
+        }
+        onOcarinaStart(fn) {
+            this.ocarinaStartListeners.push(fn);
+            return this;
+        }
+        onOcarinaEnd(fn) {
+            this.ocarinaEndListeners.push(fn);
+            return this;
+        }
+        onNoteStart(fn) {
+            this.startListeners.push(fn);
+            return this;
+        }
+        onNoteEnd(fn) {
+            this.endListeners.push(fn);
+            return this;
+        }
+        listen() {
+            return __awaiter(this, void 0, void 0, function* () {
+                yield this.pitchListener.init();
+                yield this.ocarinaDetector.init("http://localhost/models/ocarina-2pc");
+                yield this.ocarinaDetector.startListening((result) => {
+                    if (this.ocarinaPlaying === false && result === true) {
+                        this.dispatchOcarinaStart();
+                    }
+                    else if (this.ocarinaPlaying === true && result === false) {
+                        this.dispatchOcarinaEnd();
+                    }
+                    this.ocarinaPlaying = result;
+                });
+                this.startDetection();
+                return this;
+            });
+        }
+        startDetection() {
+            setInterval(() => {
+                const isOcarina = this.ocarinaPlaying;
+                const pitch = this.pitchListener.detectPitch();
+                const { isStable, note: noteString } = this.noteOnsetDetector.onFrequencyReceived(pitch);
+                if (pitch == null || isOcarina == null || !isStable)
+                    return;
+                const note = Note.fromNotation(noteString);
+                if (isOcarina && !this.isPlaying) {
+                    this.isPlaying = true;
+                    this.currentNote = note;
+                    this.dispatchNoteStart(note);
+                }
+                else if (!isOcarina && this.isPlaying) {
+                    this.isPlaying = false;
+                    this.dispatchNoteEnd(this.currentNote);
+                    this.currentNote = null;
+                }
+                else if (isOcarina && this.currentNote.toString() !== note.toString()) {
+                    this.dispatchNoteEnd(this.currentNote);
+                    this.currentNote = note;
+                    this.dispatchNoteStart(note);
+                }
+            }, 1000 / SAMPLING_FREQUENCY_IN_Hz);
+        }
+        dispatchNoteStart(note) {
+            for (let listener of this.startListeners) {
+                listener({ note, timestamp: +Date.now() });
             }
-            else if (step > 0) {
-                onFailed(notes[step], step);
-                step = 0;
+        }
+        dispatchNoteEnd(note) {
+            for (let listener of this.endListeners) {
+                listener({ note, timestamp: +Date.now() });
             }
-        });
+        }
+        dispatchOcarinaStart() {
+            for (let listener of this.ocarinaStartListeners) {
+                listener({ timestamp: +Date.now() });
+            }
+        }
+        dispatchOcarinaEnd() {
+            for (let listener of this.ocarinaEndListeners) {
+                listener({ timestamp: +Date.now() });
+            }
+        }
     }
 
     const container = document.createElement("div");
     const $currentNote = document.createElement("span");
     $currentNote.innerHTML = "-";
     container.appendChild($currentNote);
-    let zeldasLullabyLonger = "D F C A# C D F";
+    let zeldasLullabyLonger = "D F C A# C D F C";
     container.appendChild(document.createElement("br"));
     container.appendChild(document.createElement("br"));
     const $zeldasLullaby = document.createElement("p");
@@ -6030,25 +6041,39 @@ OcarinaSong {
     }
     container.appendChild($zeldasLullaby);
     document.body.appendChild(container);
-    const ocarina = new Ocarina();
-    ocarina.listen().then(() => {
-        createSongListener(zeldasLullabyLonger, function () {
-            for (let $note of $zeldasLullaby.children) {
-                // @ts-ignore
-                $note.style.color = "green";
-            }
-        }, function (note, step) {
-            // @ts-ignore
-            $zeldasLullaby.children[step].style.color = "steelblue";
-        }, function (note, step) {
-            for (let $note of $zeldasLullaby.children) {
-                // @ts-ignore
-                $note.style.color = "inherit";
+    new Ocarina().listen().then((ocarina) => {
+        ocarina.listenForSong(zeldasLullabyLonger, {
+            onNotePlayed(note, step) {
+                $zeldasLullaby.children[step].style.color = "steelblue";
+            },
+            onSongFailed(note, step) {
+                for (let $note of $zeldasLullaby.children) {
+                    $note.style.color = "inherit";
+                }
+            },
+            onSongPlayed() {
+                for (let $note of $zeldasLullaby.children) {
+                    $note.style.color = "green";
+                }
             }
         });
-        window.addEventListener("note-start", function (e) {
-            $currentNote.innerHTML = e.detail.note.toString();
-        });
+        // ocarina.onOcarinaStart(({timestamp}) => {
+        //
+        // });
+        // ocarina.onOcarinaEnd(({timestamp}) => {
+        //
+        // });
+        //
+        // ocarina.onNoteStart(({note, timestamp}) => {
+        //     $currentNote.innerHTML = note.toString();
+        // });
+        //
+        // ocarina.onNoteEnd(({note, timestamp}) => {
+        //     note.matches()
+        //
+        // });
+        //
+        // Note.fromNotation()
     });
 
 })(speechCommands);

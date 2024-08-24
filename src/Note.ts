@@ -1,8 +1,17 @@
 import {Accidental, Pitch} from "./types";
 
 export class Note {
-    static fromNotation: (noteNotation: string) => (null | Note);
-    static fromNatural: (pitch: Node, octave: Node) => Note;
+    static fromNotation(noteNotation: string) {
+        const regex = /^([A-G])([#b])?(\d)?$/;
+        const match = noteNotation.match(regex);
+
+        if (!match) {
+            return null;
+        }
+
+        const [, notePitch, noteAccidental, noteOctave] = match;
+        return new Note(notePitch as Pitch, parseAccidental(noteAccidental), noteOctave ?? null);
+    }
 
     constructor(private pitch: Pitch, private accidental: "flat" | "sharp" | null, private octave: string | null) {
     }
@@ -68,14 +77,5 @@ export function parseAccidental(accidental: string |null): null | Accidental {
     }
 }
 
-Note.fromNotation = function (noteNotation: string) {
-    const regex = /^([A-G])(#|b)?(\d)?$/;
-    const match = noteNotation.match(regex);
-
-    if (!match) {
-        return null;
-    }
-
-    const [, notePitch, noteAccidental, noteOctave] = match;
-    return new Note(notePitch as Pitch, parseAccidental(noteAccidental), noteOctave ?? null);
-}
+// @ts-ignore
+window.Note = Note;
