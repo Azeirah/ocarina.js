@@ -100,14 +100,3 @@ A.toString(); // "A"
 const Dflat = Note.fromNotation("D♭");
 Dflat.toString(); // "Db"
 ```
-
-
-
-
-## Reference
-
-
-```ts
-// Initialize and wait for it to load
-
-```
