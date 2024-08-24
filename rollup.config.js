@@ -4,7 +4,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 
 export default {
-    input: 'src/main.ts',
+    input: 'src/ocarina.ts',
     output: {
         file: 'dist/ocarina.js',
         format: 'iife',

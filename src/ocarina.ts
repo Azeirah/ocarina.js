@@ -76,7 +76,7 @@ export class Ocarina {
 
     async listen() {
         await this.pitchListener.init();
-        await this.ocarinaDetector.init("http://localhost/models/ocarina-2pc")
+        await this.ocarinaDetector.init("https://cdn.jsdelivr.net/gh/Azeirah/ocarina.js@1.0.0/models/ocarina-2pc/")
         await this.ocarinaDetector.startListening((current) => {
             const prev = this.ocarinaPlaying;
             if (!prev && current) {

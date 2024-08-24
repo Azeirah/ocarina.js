@@ -1,4 +1,4 @@
-(function (speechCommands) {
+var ocarina = (function (exports, speechCommands) {
     'use strict';
 
     function _interopNamespaceDefault(e) {
@@ -5964,7 +5964,7 @@ OcarinaSong {
         listen() {
             return __awaiter(this, void 0, void 0, function* () {
                 yield this.pitchListener.init();
-                yield this.ocarinaDetector.init("http://localhost/models/ocarina-2pc");
+                yield this.ocarinaDetector.init("https://cdn.jsdelivr.net/gh/Azeirah/ocarina.js@1.0.0/models/ocarina-2pc/");
                 yield this.ocarinaDetector.startListening((current) => {
                     const prev = this.ocarinaPlaying;
                     if (!prev && current) {
@@ -6025,43 +6025,8 @@ OcarinaSong {
         }
     }
 
-    const container = document.createElement("div");
-    const $currentNote = document.createElement("span");
-    $currentNote.innerHTML = "-";
-    container.appendChild($currentNote);
-    let zeldasLullabyLonger = "D F C A# C D F C";
-    container.appendChild(document.createElement("br"));
-    container.appendChild(document.createElement("br"));
-    const $zeldasLullaby = document.createElement("p");
-    for (let i of zeldasLullabyLonger.split(" ")) {
-        const $note = document.createElement("span");
-        $note.innerText = i;
-        $zeldasLullaby.appendChild($note);
-    }
-    container.appendChild($zeldasLullaby);
-    document.body.appendChild(container);
-    new Ocarina().listen().then((ocarina) => {
-        ocarina.listenForSong(zeldasLullabyLonger, {
-            onNotePlayed(note, step) {
-                $zeldasLullaby.children[step].style.color = "steelblue";
-            },
-            onSongFailed(note, step) {
-                for (let $note of $zeldasLullaby.children) {
-                    $note.style.color = "inherit";
-                }
-            },
-            onSongPlayed() {
-                for (let $note of $zeldasLullaby.children) {
-                    $note.style.color = "green";
-                }
-            }
-        });
-        ocarina.onNoteStart(({ note, timestamp }) => {
-            $currentNote.innerHTML = note.toString();
-        });
-        ocarina.onOcarinaEnd(() => {
-            $currentNote.innerHTML = "-";
-        });
-    });
+    exports.Ocarina = Ocarina;
 
-})(speechCommands);
+    return exports;
+
+})({}, speechCommands);

@@ -10,12 +10,16 @@
     "typescript": "^5.5.4"
   },
   "name": "ocarina-input",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Use an ocarina as an input device",
   "main": "build/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:ts": "tsc --project tsconfig.json",
+    "build:rollup": "rollup -c",
+    "build": "npm run build:ts && npm run build:rollup",
+    "prepublishOnly": "npm run build"
   },
+  "types": "dist/types/ocarina.d.ts",
   "author": "Laura Brekelmans",
   "license": "MIT",
   "dependencies": {

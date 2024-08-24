@@ -1,13 +1,10 @@
-import {Ocarina} from "./ocarina";
-import {Note} from "./Note";
-
 const container = document.createElement("div");
 
 const $currentNote = document.createElement("span")
 $currentNote.innerHTML = "-";
 container.appendChild($currentNote);
 
-let zeldasLullaby = "D F C D F C"; // not actually epona's song!! git gud idiot >_>
+let zeldasLullaby = "D F C D F C";
 let zeldasLullabyLonger = "D F C A# C D F C";
 
 container.appendChild(document.createElement("br"));
@@ -24,17 +21,15 @@ document.body.appendChild(container);
 
 new Ocarina().listen().then((ocarina) => {
     ocarina.listenForSong(zeldasLullabyLonger, {
-        onNotePlayed(note: Note, step: number): void {
-            ($zeldasLullaby.children[step] as HTMLSpanElement).style.color = "steelblue";
-        },
-        onSongFailed(note: Note, step: number): void {
+        onNotePlayed(note, step) {
+            $zeldasLullaby.children[step].style.color = "steelblue";
+        }, onSongFailed(note, step) {
             for (let $note of $zeldasLullaby.children) {
-                ($note as HTMLSpanElement).style.color = "inherit";
+                $note.style.color = "inherit";
             }
-        },
-        onSongPlayed(): void {
+        }, onSongPlayed() {
             for (let $note of $zeldasLullaby.children) {
-                ($note as HTMLSpanElement).style.color = "green";
+                $note.style.color = "green";
             }
         }
     });
