@@ -1,7 +1,5 @@
 import * as speechCommands from '@tensorflow-models/speech-commands';
 import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-backend-cpu';
-import '@tensorflow/tfjs-backend-webgl';
 
 export class OcarinaClassifier {
     private recognizer: speechCommands.SpeechCommandRecognizer | null = null;

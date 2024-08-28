@@ -3,7 +3,7 @@ import {PitchDetector} from "./pitch-detection";
 import {NoteStabilityDetector} from "./Hysteresis";
 import {Note} from "./Note";
 import {NoteEvent, OcarinaEvent} from "./types";
-import {songGrammar, songToNotes} from "./SongGrammar";
+import {songToNotes} from "./SongGrammar";
 
 const SAMPLING_FREQUENCY_IN_Hz = 40;
 

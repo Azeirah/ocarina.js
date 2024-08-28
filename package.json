@@ -30,8 +30,6 @@
   "dependencies": {
     "@tensorflow-models/speech-commands": "^0.5.4",
     "@tensorflow/tfjs": "^4.20.0",
-    "@tensorflow/tfjs-backend-cpu": "^3.21.0",
-    "@tensorflow/tfjs-backend-webgl": "^3.21.0",
     "ohm-js": "^17.1.0"
   }
 }
