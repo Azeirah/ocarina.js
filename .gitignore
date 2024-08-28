@@ -1,6 +1,8 @@
 build/
 node_modules/
+.parcel-cache/
 
 .idea/
 **/*.DS_STORE
-dist/types/
+types/
+*.tgz
