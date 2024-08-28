@@ -4,12 +4,14 @@ Your Ocarina is an input device.
 
 ## Usage
 
-### High-level: Listen for a song
+### Listen for songs or notes.
 
 ```ts
 const zeldasLullaby = "D F C D F C";
 
 new Ocarina().listen().then((ocarina) => {
+  // The ocarina is loaded, and ready to be used.
+    
   ocarina.listenForSong(zeldasLullaby, 
   {
     onNotePlayed(note: Note, step: number) {
@@ -23,10 +25,39 @@ new Ocarina().listen().then((ocarina) => {
       // When the song is completed
     }
   });
-}
+
+  ocarina.onNoteStart(({note, timestamp}) => {
+    // note has been played.
+    note.toString(); // "A4" "F#7" etc
+  });
+
+  ocarina.onNoteEnd(({note, timestamp}) => {
+
+  });
+});
 ```
 
-### Low-level: The full API
+### Installation
+
+Ocarina.js by default ships with tensorflow.js and a binary classifier tensorflow model.
+This package is therefore _not_ small.
+
+I've had a hard time bundling ocarina.js in a new project from scratch using webpack but when using vite, it works perfectly out-of-the-box.
+
+#### With Vite
+
+```bash
+# pick your poison, react, vue, svelte etc
+npm create vite@latest ocarina-project -- --template react
+npm install ocarina-js
+npm install
+npm run dev
+
+# Start coding, add this to the appropriate file, and you're ready to go :)
+# Import { Ocarina } from "ocarina-js";
+```
+
+### API reference
 
 #### Create an ocarina instance, and wait for it to load
 

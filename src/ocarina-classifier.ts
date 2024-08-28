@@ -1,8 +1,10 @@
 import * as speechCommands from '@tensorflow-models/speech-commands';
+import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-backend-cpu';
+import '@tensorflow/tfjs-backend-webgl';
 
 export class OcarinaClassifier {
     private recognizer: speechCommands.SpeechCommandRecognizer | null = null;
-    private labels: string[] = [];
 
     async init(modelPath: string) {
         const checkpointURL = `${modelPath}/model.json`;
@@ -15,8 +17,10 @@ export class OcarinaClassifier {
             metadataURL
         );
 
+        // TODO: not entirely sure if this is necessary. Then again, not entirely sure if harmful either.
+        await tf.ready();
+
         await this.recognizer.ensureModelLoaded();
-        this.labels = this.recognizer.wordLabels();
     }
 
     async startListening(
@@ -45,7 +49,7 @@ export class OcarinaClassifier {
 
     async stopListening() {
         if (this.recognizer) {
-            this.recognizer.stopListening();
+            await this.recognizer.stopListening();
         }
     }
 }

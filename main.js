@@ -43,3 +43,10 @@ new Ocarina().listen().then((ocarina) => {
     });
 });
 
+import {Ocarina} from 'ocarina-js';
+new Ocarina().listen().then((ocarina) => {
+    ocarina.onNoteStart(({note, timestamp}) => {
+        console.log(`Note played ${note}`);
+    });
+});
+

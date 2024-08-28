@@ -4,14 +4,11 @@ import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 
 export default {
-    input: 'src/ocarina.ts',
+    input: 'src/Ocarina.ts',
     output: {
         file: 'dist/ocarina.js',
-        format: 'iife',
+        format: 'esm',
         name: 'ocarina',
-        globals: {
-            '@tensorflow/tfjs': 'tf'
-        }
     },
     plugins: [
         nodeResolve({
@@ -20,7 +17,6 @@ export default {
         }),
         commonjs(),
         json(),
-        typescript()
-    ],
-    external: ['@tensorflow/tfjs', "@tensorflow-models/speech-commands"]
+        typescript(),
+    ]
 };

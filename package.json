@@ -1,18 +1,23 @@
 {
   "type": "module",
   "devDependencies": {
+    "@parcel/packager-ts": "^2.12.0",
+    "@parcel/transformer-typescript-types": "^2.12.0",
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
     "rollup": "^4.20.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-polyfills": "^0.2.1",
     "tslib": "^2.6.3",
     "typescript": "^5.5.4"
   },
-  "name": "ocarina-input",
+  "name": "ocarina-js",
   "version": "1.0.0",
   "description": "Use an ocarina as an input device",
-  "main": "build/main.js",
+  "module": "./dist/ocarina.js",
   "scripts": {
     "build:ts": "tsc --project tsconfig.json",
     "build:rollup": "rollup -c",
@@ -24,6 +29,9 @@
   "license": "MIT",
   "dependencies": {
     "@tensorflow-models/speech-commands": "^0.5.4",
+    "@tensorflow/tfjs": "^4.20.0",
+    "@tensorflow/tfjs-backend-cpu": "^3.21.0",
+    "@tensorflow/tfjs-backend-webgl": "^3.21.0",
     "ohm-js": "^17.1.0"
   }
 }

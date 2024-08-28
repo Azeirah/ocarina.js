@@ -1,3 +1,9 @@
-- [ ] Iron out wrinkles in the API design
+- [x] Iron out wrinkles in the API design
   - on ocarina detected
   - on ocarina stopped
+
+ ## 28-08-2024
+
+ - Oh no, I realized that songs with repeated notes cannot be captured by the current implementation of the song listener
+ - Goal: Make sure I ship a version that works with vite.
+   - [ ] Create a demo (standalone) vite project consuming Ocarina.js
