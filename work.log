@@ -6,4 +6,17 @@
 
  - Oh no, I realized that songs with repeated notes cannot be captured by the current implementation of the song listener
  - Goal: Make sure I ship a version that works with vite.
-   - [ ] Create a demo (standalone) vite project consuming Ocarina.js
+   - [x] Create a demo (standalone) vite project consuming Ocarina.js
+         Was a little bit difficult, but I got it to work.
+- I cried during development today
+  - I couldn't get the speech recognition library to work as it did before
+  - It felt like the library didn't work at all anymore
+  - I managed to fix both of these problems shortly after
+    - I fixed the versions of tensorflow and the speech recognition library to the same versions as on teachable machine
+      Works perfectly now
+    - It also turns out nothing had changed in the recognition algorithm, but something _had_ changed in the interface I
+      I was experimenting with; it didn't have the "current note" display.
+      Immediate feedback is of such incredible importance that it can contribute to making me cry
+- Next goals:
+  - Conceptualize a compelling web demo
+  - Resolve the issue in the SongListener that we can't listen for repeated notes
