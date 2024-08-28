@@ -41,14 +41,14 @@ export class Ocarina {
         this.onNoteStart(function ({note}) {
             if (notes[step].matches(note)) {
                 if (step < notes.length - 1) {
-                    onNotePlayed(notes[step], step);
+                    onNotePlayed?.(notes[step], step);
                     step += 1;
                 } else {
-                    onNotePlayed(notes[step], notes.length - 1);
+                    onNotePlayed?.(notes[step], notes.length - 1);
                     onSongPlayed();
                 }
             } else if (step > 0) {
-                onSongFailed(notes[step], step);
+                onSongFailed?.(notes[step], step);
                 step = 0;
             }
         });

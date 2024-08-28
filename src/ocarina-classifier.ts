@@ -1,5 +1,7 @@
 import * as speechCommands from '@tensorflow-models/speech-commands';
 import * as tf from '@tensorflow/tfjs';
+import "@tensorflow/tfjs-backend-cpu";
+import "@tensorflow/tfjs-backend-wasm";
 
 export class OcarinaClassifier {
     private recognizer: speechCommands.SpeechCommandRecognizer | null = null;
@@ -12,10 +14,8 @@ export class OcarinaClassifier {
             'BROWSER_FFT',
             undefined,
             checkpointURL,
-            metadataURL
+            metadataURL,
         );
-
-        // TODO: not entirely sure if this is necessary. Then again, not entirely sure if harmful either.
         await tf.ready();
 
         await this.recognizer.ensureModelLoaded();

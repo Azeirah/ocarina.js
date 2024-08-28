@@ -1,8 +1,8 @@
 export class PitchDetector {
+    readonly dataArray: Float32Array;
     private audioContext: AudioContext;
     private readonly analyser: AnalyserNode;
     private readonly bufferLength: number;
-    readonly dataArray: Float32Array;
 
     constructor() {
         // @ts-ignore
@@ -15,7 +15,9 @@ export class PitchDetector {
 
     async init() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: true
+            });
             const source = this.audioContext.createMediaStreamSource(stream);
             source.connect(this.analyser);
             console.log("Microphone connected successfully");
@@ -26,13 +28,15 @@ export class PitchDetector {
 
     detectPitch() {
         this.analyser.getFloatTimeDomainData(this.dataArray);
-        const ac = this.autoCorrelate(this.dataArray, this.audioContext.sampleRate);
-        console.log(ac);
+        const ac = this.autoCorrelate();
         return ac === -1 ? null : ac;
     }
 
-    autoCorrelate(buffer, sampleRate) {
+    autoCorrelate() {
+        const buffer = this.dataArray
+        const sampleRate = this.audioContext.sampleRate;
         const SIZE = buffer.length;
+
         let bestOffset = -1;
         let bestCorrelation = 0;
         let rms = 0;
@@ -62,28 +66,14 @@ export class PitchDetector {
                     bestOffset = offset;
                 }
             } else if (foundGoodCorrelation) {
-                let shift = (correlationShift(buffer, bestOffset, SIZE));
                 return sampleRate / bestOffset;
             }
             lastCorrelation = correlation;
         }
 
         if (bestCorrelation > 0.01) {
-            let shift = (correlationShift(buffer, bestOffset, SIZE));
             return sampleRate / bestOffset;
         }
         return -1;
     }
-}
-
-function correlationShift(buffer, bestOffset, SIZE) {
-    let shift = 0;
-    const maxShift = 10;
-    for (let i = 0; i < maxShift; i++) {
-        if (((bestOffset + i) < SIZE / 2) && (buffer[bestOffset + i] > buffer[bestOffset])) {
-            shift = i;
-            break;
-        }
-    }
-    return shift;
 }
